@@ -1,56 +1,103 @@
 import streamlit as st
-from openai import OpenAI
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, LabelEncoder
+from datetime import datetime
+from sklearn.ensemble import RandomForestRegressor
 
-# Show title and description.
-st.title("💬 Chatbot")
-st.write(
-    "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-    "You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
-)
+player_overview_csv = pd.read_csv('player_overview.csv')
 
-# Ask user for their OpenAI API key via `st.text_input`.
-# Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
-# via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-openai_api_key = st.text_input("OpenAI API Key", type="password")
-if not openai_api_key:
-    st.info("Please add your OpenAI API key to continue.", icon="🗝️")
-else:
+label_encoder = LabelEncoder()
 
-    # Create an OpenAI client.
-    client = OpenAI(api_key=openai_api_key)
+player_overview_csv = player_overview_csv.drop('Name', axis=1)
+player_overview_csv = player_overview_csv.drop('Club', axis=1)
+player_overview_csv = player_overview_csv.drop('Clean sheets', axis=1)
+player_overview_csv = player_overview_csv.drop('Facebook', axis=1)
 
-    # Create a session state variable to store the chat messages. This ensures that the
-    # messages persist across reruns.
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+player_overview_csv['Height'] = player_overview_csv['Height'].str.replace('cm', '').astype(float)
 
-    # Display the existing chat messages via `st.chat_message`.
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+position_mapping = {'Goalkeeper': 1, 'Defender': 2, 'Midfielder': 3, 'Forward': 4}
+player_overview_csv['Position'] = player_overview_csv['Position'].replace(position_mapping).astype('int64')
+player_overview_csv['Nationality'] = label_encoder.fit_transform(player_overview_csv['Nationality']).astype('int64')
+player_overview_csv['Height'].fillna(player_overview_csv['Height'].mean(), inplace=True)
+player_overview_csv['Assists'] = player_overview_csv['Assists'].fillna(0)
+player_overview_csv['Goals'] = player_overview_csv['Goals'].fillna(0)
+player_overview_csv['Appearances'] = player_overview_csv['Appearances'].fillna(0)
 
-    # Create a chat input field to allow the user to enter a message. This will display
-    # automatically at the bottom of the page.
-    if prompt := st.chat_input("What is up?"):
+def calculate_age(dob):
+    birth_date_str = dob.split(' ')[0]
+    birth_date = datetime.strptime(birth_date_str, '%d/%m/%Y')
+        
+    today = datetime.now()
+    age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+    return age
 
-        # Store and display the current prompt.
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+player_overview_csv['Age'] = player_overview_csv['Date of Birth'].apply(calculate_age)
 
-        # Generate a response using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-        )
+player_overview_csv = player_overview_csv.drop('Date of Birth', axis=1)
 
-        # Stream the response to the chat using `st.write_stream`, then store it in 
-        # session state.
-        with st.chat_message("assistant"):
-            response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+player_overview_csv = player_overview_csv.loc[player_overview_csv['Appearances'] < 300]
+
+features = [
+    'Nationality', 
+    'Height', 
+    'Age', 
+    'Position', 
+    'Goals', 
+    'Assists'
+    ]
+
+
+X = player_overview_csv[features]
+y = player_overview_csv['Appearances']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 4. Standardizálás
+scaler = RobustScaler()
+X_train_scaled = scaler.fit_transform(X_train) # Illesztés és transzformálás a tanító adatokon
+X_test_scaled = scaler.transform(X_test) # Transzformálás a teszt adatokon a tanító adatokon tanult scalerrel
+
+model = RandomForestRegressor(n_estimators=200, min_samples_split= 5, min_samples_leaf=2, max_depth= None, random_state= 42)
+
+# 6. Modell illesztése a standardizált tanító adatokra
+model.fit(X_train, y_train)
+
+# 7. Predikciók a standardizált teszt adatokon
+y_pred = model.predict(X_test)
+                       
+# 8. Kiértékelés
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f"MSE: {mse}")
+print(f"R2: {r2}")
+
+st.title("Player Appearances Prediction")
+st.write("Adja meg a játékos adatait, hogy megkapja a predikált \"Appearances\" értéket!")
+
+# 3. Felhasználói bemenet
+st.sidebar.header("Input Data")
+nationality = st.sidebar.slider("Nationality (kód)", 0, 10, 5)
+height = st.sidebar.slider("Height (cm)", 150, 210, 180)
+age = st.sidebar.slider("Age", 18, 40, 25)
+position = st.sidebar.slider("Position (kód)", 0, 5, 2)
+goals = st.sidebar.slider("Goals", 0, 30, 5)
+assists = st.sidebar.slider("Assists", 0, 20, 3)
+clean_sheets = st.sidebar.slider("Clean Sheets", 0, 10, 2)
+
+# 4. Adatok előkészítése
+input_data = np.array([[nationality, height, age, position, goals, assists]])
+scaler = RobustScaler()
+scaled_input = scaler.fit_transform(input_data)
+
+# 5. Modell betöltése és predikció
+predicted_appearances = model.predict(scaled_input)
+
+# 6. Predikció megjelenítése
+st.subheader("Predicted Appearances")
+st.write(f"A predikált meccsszám: **{predicted_appearances[0]:.2f}**")
