@@ -82,18 +82,18 @@ st.sidebar.header("Input Data")
 nationality = st.sidebar.slider("Nationality (kód)", 0, 10, 5)
 height = st.sidebar.slider("Height (cm)", 150, 210, 180)
 age = st.sidebar.slider("Age", 18, 40, 25)
-position = st.sidebar.slider("Position (kód)", 0, 5, 2)
+position = st.sidebar.slider("Position (kód)", 1, 4, 2)
 goals = st.sidebar.slider("Goals", 0, 30, 5)
 assists = st.sidebar.slider("Assists", 0, 20, 3)
-clean_sheets = st.sidebar.slider("Clean Sheets", 0, 10, 2)
+# clean_sheets = st.sidebar.slider("Clean Sheets", 0, 10, 2)
 
 # 4. Adatok előkészítése
 input_data = np.array([[nationality, height, age, position, goals, assists]])
-scaler = RobustScaler()
-scaled_input = scaler.fit_transform(input_data)
+#scaler = RobustScaler()
+#scaled_input = scaler.fit_transform(input_data)
 
 # 5. Modell betöltése és predikció
-predicted_appearances = model.predict(scaled_input)
+predicted_appearances = model.predict(input_data)
 
 # 6. Predikció megjelenítése
 st.subheader("Predicted Appearances")
