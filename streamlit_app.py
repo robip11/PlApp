@@ -13,7 +13,7 @@ path = kagglehub.dataset_download("indrajuliansyahputra/premier-league-player-st
 
 print("Path to dataset files:", path)
 
-player_overview_csv = pd.read_csv(path[0])
+player_overview_csv = pd.read_csv(path + "/player_overview.csv")
 
 label_encoder = LabelEncoder()
 
