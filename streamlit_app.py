@@ -80,11 +80,11 @@ st.write("Adja meg az adatokat, hogy megkapja a predikált \"Appearances\" ért�
 # 3. Felhasználói bemenet
 st.sidebar.header("Input Data")
 #nationality = st.sidebar.slider("Nationality (kód)", 0, 10, 5)
-height = st.sidebar.slider("Height (cm)", 150, 210, 180)
-age = st.sidebar.slider("Age", 18, 40, 25)
+height = st.sidebar.slider("Height (cm)", 165, 210, 180)
+age = st.sidebar.slider("Age", 15, 40, 25)
 position = st.sidebar.slider("Position (kód)", 1, 4, 2)
-goals = st.sidebar.slider("Goals", 0, 30, 5)
-assists = st.sidebar.slider("Assists", 0, 20, 3)
+goals = st.sidebar.slider("Goals", 0, 150, 5)
+assists = st.sidebar.slider("Assists", 0, 110, 3)
 # clean_sheets = st.sidebar.slider("Clean Sheets", 0, 10, 2)
 
 # 4. Adatok előkészítése
