@@ -5,7 +5,7 @@ from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import LabelEncoder
 from datetime import datetime
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split,
+from sklearn.model_selection import train_test_split
 import kagglehub
 
 # Download latest version
