@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, LabelEncoder
+from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import LabelEncoder
 from datetime import datetime
 from sklearn.ensemble import RandomForestRegressor
 
