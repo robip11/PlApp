@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import LabelEncoder
 from datetime import datetime
 from sklearn.ensemble import RandomForestRegressor
@@ -62,7 +62,7 @@ y = player_overview_csv['Appearances']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # 4. Standardizálás
-scaler = RobustScaler()
+scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train) # Illesztés és transzformálás a tanító adatokon
 X_test_scaled = scaler.transform(X_test) # Transzformálás a teszt adatokon a tanító adatokon tanult scalerrel
 
