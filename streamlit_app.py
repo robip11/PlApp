@@ -6,7 +6,12 @@ from sklearn.preprocessing import LabelEncoder
 from datetime import datetime
 from sklearn.ensemble import RandomForestRegressor
 
-player_overview_csv = pd.read_csv(r"D:\Dokumentumok\Egyetem\7. félév\Bevezetés a gépi tanulásba\archive\player_overview.csv")
+import kagglehub
+
+# Download latest version
+path = kagglehub.dataset_download("indrajuliansyahputra/premier-league-player-stats-2324")
+
+print("Path to dataset files:", path)
 
 label_encoder = LabelEncoder()
 
